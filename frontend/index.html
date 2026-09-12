@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SPILLTRACE AI — Marine Oil Spill Intelligence</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+:root{
+ --bg:#f4f7fb;--surface:#fff;--surface2:#f8fafc;--line:#e4eaf2;
+ --text:#172033;--muted:#667085;--primary:#155eef;--primary-dark:#0b4ecb;
+ --navy:#0b1f33;--green:#079455;--green-bg:#ecfdf3;--orange:#f79009;
+ --red:#d92d20;--shadow:0 8px 30px rgba(16,42,67,.07);
+}
+*{box-sizing:border-box} html,body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,Segoe UI,Arial,sans-serif}
+button,input,select{font:inherit}button{cursor:pointer}.hidden{display:none!important}
+.top{height:70px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 30px;position:sticky;top:0;z-index:1000}
+.brand{display:flex;align-items:center;gap:12px}.logo{width:40px;height:40px;background:var(--navy);color:#fff;border-radius:10px;display:grid;place-items:center;font-weight:900}.brand strong{display:block;letter-spacing:.06em}.brand small{color:var(--muted);font-size:10px}
+.top-right{display:flex;align-items:center;gap:14px}.live{color:var(--green);font-size:11px;font-weight:800;display:flex;gap:7px;align-items:center}.live i{width:8px;height:8px;background:var(--green);border-radius:50%}
+.container{max-width:1420px;margin:auto;padding:28px}
+.screen{min-height:calc(100vh - 70px)}.hero{padding:54px 0 30px;max-width:920px}.eyebrow{font-size:11px;font-weight:900;letter-spacing:.14em;color:var(--primary)}h1{font-size:46px;line-height:1.08;margin:10px 0 12px;letter-spacing:-.03em}.hero p{font-size:17px;color:var(--muted);line-height:1.6;max-width:760px}
+.hero-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:24px}.btn{border:1px solid #cfd8e5;background:#fff;color:var(--text);border-radius:9px;padding:11px 16px;font-weight:800}.btn:hover{border-color:#9db8e9;background:#f7faff}.btn.primary{background:var(--primary);color:#fff;border-color:var(--primary)}.btn.primary:hover{background:var(--primary-dark)}.btn.green{color:#067647;background:var(--green-bg);border-color:#abefc6}.btn:disabled{opacity:.5;cursor:not-allowed}
+.features{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:20px 0 40px}.feature{background:#fff;border:1px solid var(--line);border-radius:12px;padding:17px;box-shadow:var(--shadow)}.feature-icon{font-size:22px}.feature b{display:block;margin-top:10px;font-size:13px}.feature span{display:block;color:var(--muted);font-size:11px;margin-top:4px;line-height:1.4}
+.workflow{display:grid;grid-template-columns:230px 1fr;gap:20px}.sidebar{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;height:max-content;position:sticky;top:88px}.side-title{font-size:10px;color:var(--muted);font-weight:900;letter-spacing:.1em;margin:4px 8px 12px}.navstep{width:100%;text-align:left;border:0;background:transparent;padding:11px 9px;border-radius:8px;display:flex;gap:10px;align-items:center;color:var(--muted);margin-bottom:4px}.navstep .n{width:25px;height:25px;border-radius:50%;background:#edf1f5;display:grid;place-items:center;font-size:11px;font-weight:900;flex:none}.navstep b{font-size:12px}.navstep small{display:block;font-size:10px;margin-top:2px}.navstep.active{background:#eff5ff;color:#174ea6}.navstep.active .n{background:var(--primary);color:#fff}.navstep.done .n{background:#dcfae6;color:#067647}
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);overflow:hidden}.card-head{padding:15px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}.card-head h2{font-size:14px;margin:0}.card-head span{font-size:10px;color:var(--muted)}.card-body{padding:20px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.field label{display:block;font-size:11px;font-weight:800;margin-bottom:6px}.field input,.field select{width:100%;border:1px solid #cfd8e5;border-radius:8px;padding:11px;background:#fff;color:var(--text);outline:none}.field input:focus,.field select:focus{border-color:var(--primary);box-shadow:0 0 0 3px #155eef18}
+.mode-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:15px}.mode{border:1px solid var(--line);border-radius:10px;padding:14px;background:#fff}.mode.selected{border-color:#9db8e9;background:#f7faff}.mode input{accent-color:var(--primary)}.mode b{display:block;font-size:12px;margin-top:8px}.mode span{font-size:10px;color:var(--muted)}
+.screen-title{margin-bottom:18px}.screen-title .eyebrow{font-size:10px}.screen-title h2{font-size:26px;margin:6px 0}.screen-title p{margin:0;color:var(--muted);font-size:13px}
+.bottom-actions{display:flex;justify-content:space-between;gap:10px;margin-top:18px}.right-actions{display:flex;gap:8px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:15px}.kpi{border:1px solid var(--line);border-radius:9px;padding:13px;background:var(--surface2)}.kpi label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}.kpi b{font-size:20px;display:block;margin-top:5px}
+.analysis-grid{display:grid;grid-template-columns:1.5fr .8fr;gap:15px}#map{height:520px}.mapbox{position:relative}.legend{position:absolute;left:12px;bottom:12px;z-index:500;background:#fff;border:1px solid var(--line);border-radius:8px;padding:9px 11px;font-size:10px;box-shadow:0 2px 10px #0001}.legend-row{margin:4px 0;display:flex;align-items:center;gap:6px}.ld{width:8px;height:8px;border-radius:50%}
+.result{border:1px solid var(--line);border-radius:9px;padding:14px;background:var(--surface2);margin-bottom:10px}.result b{font-size:17px}.result small{display:block;color:var(--muted);font-size:10px;margin-top:4px}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}.metric{border:1px solid var(--line);background:#fff;border-radius:8px;padding:10px}.metric label{display:block;color:var(--muted);font-size:9px}.metric b{font-size:14px;display:block;margin-top:4px}
+.progress{height:8px;background:#e9edf2;border-radius:99px;overflow:hidden}.fill{height:100%;background:var(--primary);border-radius:99px}.score-fill{background:var(--green)}
+.timeline{display:flex;overflow:auto;margin-top:12px}.timeitem{min-width:110px;border-top:2px solid var(--orange);padding:9px 8px}.timeitem b{font-size:11px}.timeitem small{display:block;color:var(--muted);font-size:9px;margin-top:3px}
+table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:12px 9px;border-bottom:1px solid var(--line);text-align:left}th{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}tbody tr:hover{background:#f8fafc;cursor:pointer}.score{font-weight:900;color:var(--green)}.rank{width:26px;height:26px;border-radius:50%;background:#edf1f5;display:grid;place-items:center;font-size:10px;font-weight:900}
+.badge{display:inline-block;padding:4px 7px;border-radius:999px;font-size:9px;font-weight:900;background:#eef4ff;color:#174ea6}.badge.green{background:var(--green-bg);color:#067647}.badge.orange{background:#fff6ed;color:#b54708}
+.evidence{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.evidence div{border:1px solid var(--line);border-radius:8px;background:var(--surface2);padding:12px;font-size:11px}
+.report{background:#fff;border:1px solid var(--line);border-radius:10px;padding:20px}.report-row{display:grid;grid-template-columns:180px 1fr;border-bottom:1px solid var(--line);padding:10px 0;font-size:12px}.report-row label{color:var(--muted)}.disclaimer{margin-top:15px;padding:11px;background:#fff6ed;border:1px solid #fedf89;border-radius:8px;font-size:10px;color:#8a4b08;line-height:1.5}
+.empty{text-align:center;padding:30px;color:var(--muted);font-size:12px}.empty strong{display:block;color:var(--text);font-size:14px;margin-bottom:5px}
+.toast{position:fixed;right:22px;bottom:22px;background:var(--navy);color:#fff;padding:12px 15px;border-radius:9px;font-size:12px;box-shadow:var(--shadow);z-index:2000}
+@media(max-width:1000px){.features{grid-template-columns:1fr 1fr}.workflow{grid-template-columns:1fr}.sidebar{position:static}.analysis-grid{grid-template-columns:1fr}.kpis{grid-template-columns:1fr 1fr}}
+@media(max-width:620px){.top{padding:0 14px}.container{padding:16px 12px}h1{font-size:34px}.features,.form-grid,.mode-grid,.kpis,.grid2,.evidence{grid-template-columns:1fr}.top-right .live{display:none}.bottom-actions{display:block}.right-actions{margin-top:10px}.btn{width:100%}.right-actions .btn{width:auto}.sidebar{padding:8px}.navstep{display:inline-flex;width:auto;margin-right:3px}.navstep div:last-child{display:none}.workflow{gap:10px}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand"><div class="logo">ST</div><div><strong>SPILLTRACE AI</strong><small> · MARINE OIL-SPILL INTELLIGENCE</small></div></div>
+  <div class="top-right"><span class="live"><i></i> SYSTEM READY</span></div>
+</header>
+
+<main class="container">
+
+<section id="welcome" class="screen">
+  <div class="hero">
+    <div class="eyebrow">SIH 2026 · PROBLEM STATEMENT 26143 TEAM SOLUTIONEER</div>
+    <h1>Marine oil-spill investigation, from satellite to suspect vessel.</h1>
+    <p>SPILLTRACE AI combines satellite imagery, drift reconstruction and historical AIS traffic to help investigators detect a spill, estimate its origin and prioritize vessels for further verification.</p>
+    <div class="hero-actions">
+      <button class="btn primary" id="start">Start New Investigation →</button>
+      <button class="btn" id="demo">View Demo Investigation</button>
+    </div>
+  </div>
+  <div class="features">
+    <div class="feature"><div class="feature-icon">🛰️</div><b>Satellite Intelligence</b><span>Detect and characterize suspected oil slicks.</span></div>
+    <div class="feature"><div class="feature-icon">🌊</div><b>Drift Reconstruction</b><span>Trace the slick backward and forward through time.</span></div>
+    <div class="feature"><div class="feature-icon">🚢</div><b>AIS Correlation</b><span>Filter historical vessel traffic around the origin window.</span></div>
+    <div class="feature"><div class="feature-icon">🔎</div><b>Explainable Attribution</b><span>Rank candidates using transparent evidence signals.</span></div>
+  </div>
+</section>
+
+<section id="investigation" class="screen hidden">
+  <div class="workflow">
+    <aside class="sidebar">
+      <div class="side-title">INVESTIGATION</div>
+      <button class="navstep active" data-go="1"><div class="n">1</div><div><b>New case</b><small>Set incident context</small></div></button>
+      <button class="navstep" data-go="2"><div class="n">2</div><div><b>Detect spill</b><small>Analyze satellite scene</small></div></button>
+      <button class="navstep" data-go="3"><div class="n">3</div><div><b>Trace origin</b><small>Run hindcast</small></div></button>
+      <button class="navstep" data-go="4"><div class="n">4</div><div><b>Correlate AIS</b><small>Find candidates</small></div></button>
+      <button class="navstep" data-go="5"><div class="n">5</div><div><b>Investigate</b><small>Review evidence</small></div></button>
+      <button class="navstep" data-go="6"><div class="n">6</div><div><b>Report</b><small>Export findings</small></div></button>
+    </aside>
+
+    <div>
+      <section class="case-step" data-step="1">
+        <div class="screen-title"><div class="eyebrow">STEP 1 OF 6</div><h2>Create an investigation</h2><p>Enter the basic incident context. Demo mode is ready for immediate testing.</p></div>
+        <div class="card"><div class="card-body">
+          <div class="form-grid">
+            <div class="field"><label>Investigation name</label><input id="caseName" value="Arabian Sea Oil Spill"></div>
+            <div class="field"><label>Incident date</label><input id="caseDate" type="date" value="2026-08-28"></div>
+            <div class="field"><label>Region</label><input id="caseRegion" value="Arabian Sea"></div>
+            <div class="field"><label>Investigator</label><input value="SPILLTRACE Demo Team"></div>
+          </div>
+          <div style="margin-top:20px;font-size:11px;font-weight:800">Choose data mode</div>
+          <div class="mode-grid">
+            <label class="mode selected"><input type="radio" name="mode" checked> <b>Demo Dataset</b><span>Preloaded satellite, AIS and environmental data.</span></label>
+            <label class="mode"><input type="radio" name="mode"> <b>Satellite Upload</b><span>Reserved for real SAR/EO image integration.</span></label>
+            <label class="mode"><input type="radio" name="mode"> <b>Research Mode</b><span>Designed for real historical data pipelines.</span></label>
+          </div>
+          <div class="bottom-actions"><span></span><button class="btn primary" id="caseContinue">Continue to Detection →</button></div>
+        </div></div>
+      </section>
+
+      <section class="case-step hidden" data-step="2">
+        <div class="screen-title"><div class="eyebrow">STEP 2 OF 6</div><h2>Detect the oil spill</h2><p>Analyze the satellite/SAR scene and characterize the suspected slick.</p></div>
+        <div class="kpis"><div class="kpi"><label>Confidence</label><b id="kConfidence">—</b></div><div class="kpi"><label>Area</label><b id="kArea">—</b></div><div class="kpi"><label>Estimated age</label><b id="kAge">—</b></div><div class="kpi"><label>Shape</label><b id="kShape">—</b></div></div>
+        <div class="analysis-grid">
+          <div class="card"><div class="card-head"><h2>Satellite scene</h2><span>Click Analyze to process</span></div><div class="mapbox"><div id="map"></div><div class="legend"><b>Layers</b><div class="legend-row"><i class="ld" style="background:#d92d20"></i> Detected slick</div><div class="legend-row"><i class="ld" style="background:#f79009"></i> Probable origin</div><div class="legend-row"><i class="ld" style="background:#155eef"></i> AIS candidate</div></div></div></div>
+          <div class="card"><div class="card-head"><h2>Detection result</h2><span id="incidentBadge">Waiting</span></div><div class="card-body">
+            <div id="detectEmpty" class="empty"><strong>No scene analyzed</strong>Run the demo analysis to detect the oil slick.</div>
+            <div id="detectResult" class="hidden">
+              <div class="result"><b>Oil slick detected</b><small id="source">—</small><div style="margin-top:12px;font-size:10px;font-weight:800;display:flex;justify-content:space-between"><span>Detection confidence</span><span id="confidence">—</span></div><div class="progress" style="margin-top:5px"><div class="fill" id="confidenceBar"></div></div></div>
+              <div class="grid2"><div class="metric"><label>Area</label><b id="area">—</b></div><div class="metric"><label>Perimeter</label><b id="perimeter">—</b></div><div class="metric"><label>Centroid</label><b id="centroid">—</b></div><div class="metric"><label>Age</label><b id="age">—</b></div></div>
+              <div class="bottom-actions"><button class="btn" id="analyzeAgain">Analyze Again</button><button class="btn primary" id="toOrigin">Trace Origin →</button></div>
+            </div>
+          </div></div>
+        </div>
+      </section>
+
+      <section class="case-step hidden" data-step="3">
+        <div class="screen-title"><div class="eyebrow">STEP 3 OF 6</div><h2>Reconstruct the probable origin</h2><p>Run a backward drift simulation using current and wind vectors.</p></div>
+        <div class="card"><div class="card-body">
+          <div id="hindcastEmpty" class="empty"><strong>Ready for hindcast</strong>Run the reconstruction to estimate the probable origin zone.</div>
+          <div id="hindcastResult" class="hidden">
+            <div class="kpis"><div class="kpi"><label>Origin confidence</label><b id="originConf">—</b></div><div class="kpi"><label>Origin time</label><b id="originTime">—</b></div><div class="kpi"><label>Latitude</label><b id="originLat">—</b></div><div class="kpi"><label>Longitude</label><b id="originLon">—</b></div></div>
+            <div class="result"><b>Backward drift path</b><small>Older positions are reconstructed from the observed slick.</small><div class="timeline" id="timeline"></div></div>
+            <div class="grid2"><div class="metric"><label>Current vector</label><b id="current">—</b></div><div class="metric"><label>Wind</label><b id="wind">—</b></div></div>
+            <div class="notice" style="margin-top:10px;padding:11px;background:#fff6ed;border:1px solid #fedf89;border-radius:8px;font-size:10px;color:#8a4b08">Prototype note: this is a simplified vector-field hindcast. Replace with gridded ocean reanalysis/forecast data for operational deployment.</div>
+            <div class="bottom-actions"><button class="btn" id="runHindcastAgain">Run Again</button><button class="btn primary" id="toAIS">Correlate AIS →</button></div>
+          </div>
+        </div></div>
+      </section>
+
+      <section class="case-step hidden" data-step="4">
+        <div class="screen-title"><div class="eyebrow">STEP 4 OF 6</div><h2>Correlate historical AIS traffic</h2><p>Filter vessel records by time and proximity, then score the strongest trajectory matches.</p></div>
+        <div class="kpis"><div class="kpi"><label>All AIS records</label><b id="allAIS">—</b></div><div class="kpi"><label>Time-window candidates</label><b id="timeAIS">—</b></div><div class="kpi"><label>Spatial candidates</label><b id="spaceAIS">—</b></div><div class="kpi"><label>Top score</label><b id="topScore">—</b></div></div>
+        <div class="card"><div class="card-head"><h2>Candidate vessels</h2><span id="aisStatus">Run correlation to populate</span></div><div class="card-body" id="aisTable"><div class="empty"><strong>No candidates yet</strong>Run AIS correlation to filter the historical traffic.</div></div></div>
+        <div class="bottom-actions"><button class="btn" id="runAISAgain">Run Again</button><button class="btn primary" id="toInvestigate">Review Top Candidate →</button></div>
+      </section>
+
+      <section class="case-step hidden" data-step="5">
+        <div class="screen-title"><div class="eyebrow">STEP 5 OF 6</div><h2>Investigate a vessel</h2><p>Review the evidence signals behind the attribution score.</p></div>
+        <div class="card"><div class="card-body" id="vesselDetails"><div class="empty"><strong>Select a vessel from Step 4</strong>The evidence panel will appear here.</div></div></div>
+        <div class="bottom-actions"><button class="btn" id="backAIS">← Candidate list</button><button class="btn primary" id="toReport">Generate Investigation Report →</button></div>
+      </section>
+
+      <section class="case-step hidden" data-step="6">
+        <div class="screen-title"><div class="eyebrow">STEP 6 OF 6</div><h2>Investigation report</h2><p>Summarize the incident, reconstruction and highest-priority candidate.</p></div>
+        <div class="report" id="reportContent"></div>
+        <div class="bottom-actions"><button class="btn" id="printReport">Print / Save PDF</button><div class="right-actions"><button class="btn" id="newCase">New Investigation</button></div></div>
+      </section>
+    </div>
+  </div>
+</section>
+</main>
+<div id="toast" class="toast hidden"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const state={step:1,incident:null,detection:null,hindcast:null,ais:null,selected:null};
+let map,spillShape,originMarker,driftLine,layers=[];
+function toast(msg){$('toast').textContent=msg;$('toast').classList.remove('hidden');setTimeout(()=>$('toast').classList.add('hidden'),2200)}
+function showScreen(id){$('welcome').classList.toggle('hidden',id!=='welcome');$('investigation').classList.toggle('hidden',id!=='investigation')}
+function showStep(n){
+ state.step=n;
+ document.querySelectorAll('.case-step').forEach(x=>x.classList.toggle('hidden',+x.dataset.step!==n));
+ document.querySelectorAll('.navstep').forEach(x=>{const g=+x.dataset.go;x.classList.toggle('active',g===n);x.classList.toggle('done',g<n)});
+ window.scrollTo({top:0,behavior:'smooth'});
+}
+function initMap(){
+ if(map)return;
+ map=L.map('map').setView([15.4321,72.8123],9);
+ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,attribution:'© OpenStreetMap'}).addTo(map);
+}
+function clearMap(){layers.forEach(x=>map.removeLayer(x));layers=[];if(spillShape)map.removeLayer(spillShape);if(originMarker)map.removeLayer(originMarker);if(driftLine)map.removeLayer(driftLine);spillShape=originMarker=driftLine=null}
+function marker(lat,lon,color,popup){const m=L.circleMarker([lat,lon],{radius:7,color,fillColor:color,fillOpacity:.9,weight:2}).addTo(map);m.bindPopup(popup);layers.push(m);return m}
+async function api(url,opts={}){const r=await fetch(url,opts);if(!r.ok)throw new Error(await r.text());return r.json()}
+function loading(btn,text){btn.disabled=true;btn.dataset.old=btn.textContent;btn.textContent=text}
+function done(btn){btn.disabled=false;btn.textContent=btn.dataset.old||btn.textContent}
+function drawSpill(lat,lon){
+ const pts=[];for(let i=0;i<32;i++){const a=Math.PI*2*i/32;pts.push([lat+.055*Math.sin(a),lon+.10*Math.cos(a)])}
+ spillShape=L.polygon(pts,{color:'#d92d20',fillColor:'#d92d20',fillOpacity:.18,weight:2}).addTo(map);
+ marker(lat,lon,'#d92d20','<b>Detected oil slick</b><br>94.2% confidence');
+ map.fitBounds(spillShape.getBounds().pad(.25));
+}
+async function detect(){
+ initMap();loading($('analyzeAgain'),'Analyzing…');
+ try{
+  const x=await api('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'demo'})});
+  state.incident=x.incident;state.detection=x.detection;clearMap();drawSpill(x.incident.lat,x.incident.lon);
+  $('incidentBadge').textContent=x.incident.id;$('incidentBadge').className='badge green';
+  $('detectEmpty').classList.add('hidden');$('detectResult').classList.remove('hidden');
+  $('source').textContent=x.incident.source+' · '+x.incident.timestamp;
+  $('confidence').textContent=x.detection.confidence+'%';$('confidenceBar').style.width=x.detection.confidence+'%';
+  $('kConfidence').textContent=x.detection.confidence+'%';$('kArea').textContent=x.detection.geometry.area_km2+' km²';$('kAge').textContent=x.detection.estimated_age_hours+' h';$('kShape').textContent=x.detection.geometry.shape;
+  $('area').textContent=x.detection.geometry.area_km2+' km²';$('perimeter').textContent=x.detection.geometry.perimeter_km+' km';$('age').textContent=x.detection.estimated_age_hours+' h';$('centroid').textContent=x.incident.lat+', '+x.incident.lon;
+  showStep(2);toast('Oil slick detected successfully');
+ }catch(e){alert('Detection failed: '+e.message)}finally{done($('analyzeAgain'))}
+}
+async function hindcast(){
+ loading($('runHindcastAgain'),'Tracing…');
+ try{
+  const x=await api('/api/hindcast',{method:'POST'});state.hindcast=x;
+  driftLine=L.polyline(x.path.map(p=>[p.lat,p.lon]),{color:'#f79009',weight:4,dashArray:'7 7'}).addTo(map||L.map('map'));layers.push(driftLine);
+  originMarker=marker(x.origin.lat,x.origin.lon,'#f79009','<b>Probable origin</b><br>Confidence '+x.origin_confidence+'%');
+  $('originConf').textContent=x.origin_confidence+'%';$('originTime').textContent=x.origin_time;$('originLat').textContent=x.origin.lat;$('originLon').textContent=x.origin.lon;
+  $('current').textContent=x.environment.current_u_mps+' m/s E · '+x.environment.current_v_mps+' m/s N';$('wind').textContent=x.environment.wind_speed_knots+' knots · '+x.environment.wind_direction_deg+'°';
+  $('timeline').innerHTML=x.path.slice().reverse().map((p,i)=>'<div class="timeitem"><b>'+Math.abs(p.hours_from_observation).toFixed(1)+'h ago</b><small>'+p.lat+', '+p.lon+'</small></div>').join('');
+  $('hindcastEmpty').classList.add('hidden');$('hindcastResult').classList.remove('hidden');
+  map.fitBounds(driftLine.getBounds().pad(.25));toast('Probable origin reconstructed');
+ }catch(e){alert('Hindcast failed: '+e.message)}finally{done($('runHindcastAgain'))}
+}
+async function correlate(){
+ loading($('runAISAgain'),'Correlating…');
+ try{
+  const x=await api('/api/correlate-ais',{method:'POST'});state.ais=x;
+  $('allAIS').textContent=x.total_ais_records;$('timeAIS').textContent=x.time_window_candidates;$('spaceAIS').textContent=x.spatial_candidates;
+  $('topScore').textContent=x.vessels.length?x.vessels[0].score+'%':'—';$('aisStatus').textContent=x.time_window_candidates+' time-window records → '+x.spatial_candidates+' spatial candidates';
+  clearMap();if(state.incident)drawSpill(state.incident.lat,state.incident.lon);
+  const rows=x.vessels.map((v,i)=>'<tr data-mmsi="'+v.mmsi+'"><td><div class="rank">'+(i+1)+'</div></td><td><b>'+v.vessel_name+'</b><br><small style="color:#667085">'+v.mmsi+'</small></td><td>'+v.type+'</td><td>'+v.distance_km+' km</td><td>'+v.time_delta_minutes+' min</td><td class="score">'+v.score+'%</td></tr>').join('');
+  $('aisTable').innerHTML='<div style="overflow:auto"><table><thead><tr><th>Rank</th><th>Vessel</th><th>Type</th><th>Distance</th><th>Time Δ</th><th>Score</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+  x.vessels.forEach(v=>{const m=marker(v.latitude,v.longitude,'#155eef','<b>'+v.vessel_name+'</b><br>Score '+v.score+'%');m.on('click',()=>selectVessel(v.mmsi))});
+  document.querySelectorAll('tr[data-mmsi]').forEach(r=>r.addEventListener('click',()=>selectVessel(r.dataset.mmsi)));
+  toast(x.vessels.length+' candidate vessels ranked');
+ }catch(e){alert('AIS correlation failed: '+e.message)}finally{done($('runAISAgain'))}
+}
+async function selectVessel(mmsi){
+ try{
+  const x=await api('/api/vessels/'+mmsi);state.selected=x;
+  const m=x.metrics;
+  $('vesselDetails').innerHTML='<div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:start"><div><div style="font-size:23px;font-weight:900">'+x.vessel_name+'</div><div style="color:#667085;font-size:11px;margin-top:4px">MMSI '+x.mmsi+' · '+x.ship_type+'</div></div><span class="badge '+(m.score>=80?'green':'orange')+'">'+(m.score>=80?'HIGH PRIORITY':'POTENTIAL')+'</span></div><div style="margin:18px 0 7px;font-size:11px;font-weight:900;display:flex;justify-content:space-between"><span>OVERALL ATTRIBUTION SCORE</span><span>'+m.score+'%</span></div><div class="progress"><div class="fill score-fill" style="width:'+m.score+'%"></div></div><div class="evidence" style="margin-top:15px">'+x.evidence.map(e=>'<div>'+e+'</div>').join('')+'</div><div class="result" style="margin-top:14px"><b>Why this vessel?</b><small>Its historical position is close to the reconstructed origin window and its trajectory/time/behaviour signals produced the strongest combined score among the filtered candidates.</small></div><div class="disclaimer">Important: this is an investigative prioritization score, not legal proof that the vessel caused the spill. Operational verification is required.</div>';
+  showStep(5);toast('Vessel evidence loaded');
+  if(x.track?.length){const line=L.polyline(x.track.map(p=>[p.lat,p.lon]),{color:'#155eef',weight:3}).addTo(map);layers.push(line);map.fitBounds(line.getBounds().pad(.4))}
+ }catch(e){alert('Vessel lookup failed: '+e.message)}
+}
+function buildReport(){
+ const i=state.incident,d=state.detection,h=state.hindcast,v=state.selected;
+ $('reportContent').innerHTML='<div style="font-size:20px;font-weight:900;margin-bottom:4px">SPILLTRACE AI — Investigation Summary</div><div style="color:#667085;font-size:11px;margin-bottom:15px">'+($('caseName').value||'Marine Oil Spill Investigation')+' · '+($('caseRegion').value||'Arabian Sea')+'</div>'+
+ '<div class="report-row"><label>Incident</label><b>'+i.id+'</b></div><div class="report-row"><label>Observed</label><b>'+i.timestamp+'</b></div><div class="report-row"><label>Spill confidence</label><b>'+d.confidence+'%</b></div><div class="report-row"><label>Estimated area</label><b>'+d.geometry.area_km2+' km²</b></div><div class="report-row"><label>Estimated age</label><b>'+d.estimated_age_hours+' hours</b></div><div class="report-row"><label>Origin confidence</label><b>'+h.origin_confidence+'%</b></div><div class="report-row"><label>Probable origin</label><b>'+h.origin.lat+', '+h.origin.lon+'</b></div><div class="report-row"><label>Top candidate vessel</label><b>'+v.vessel_name+'</b></div><div class="report-row"><label>Attribution score</label><b>'+v.metrics.score+'%</b></div><div class="disclaimer">SPILLTRACE AI is designed to prioritize vessels for investigation using spatio-temporal evidence. Attribution scores are not legal proof of responsibility and require operational verification.</div>';
+}
+$('start').onclick=()=>{showScreen('investigation');showStep(1)};
+$('demo').onclick=()=>{showScreen('investigation');showStep(1);setTimeout(()=>{$('caseContinue').click();setTimeout(()=>{$('analyzeAgain').click()},200)},50)};
+$('caseContinue').onclick=()=>{showStep(2);initMap()};
+$('analyzeAgain').onclick=detect;
+$('toOrigin').onclick=()=>{showStep(3);if(!state.hindcast)hindcast()};
+$('runHindcastAgain').onclick=hindcast;
+$('toAIS').onclick=()=>{showStep(4);if(!state.ais)correlate()};
+$('runAISAgain').onclick=correlate;
+$('toInvestigate').onclick=()=>{if(state.ais?.vessels?.length){selectVessel(state.ais.vessels[0].mmsi)}else toast('Run AIS correlation first')};
+$('backAIS').onclick=()=>showStep(4);
+$('toReport').onclick=()=>{if(!state.selected){toast('Select a vessel first');return}buildReport();showStep(6)};
+$('printReport').onclick=()=>window.print();
+$('newCase').onclick=()=>location.reload();
+document.querySelectorAll('.navstep').forEach(b=>b.onclick=()=>{const n=+b.dataset.go;if(n===1||n<=state.step||((n===2)&&state.detection)||((n===3)&&state.hindcast)||((n===4)&&state.ais)||((n===5)&&state.selected)){showStep(n)}else toast('Complete the previous step first')});
+</script>
+</body>
+</html>
